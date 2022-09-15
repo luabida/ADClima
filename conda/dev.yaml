@@ -1,0 +1,7 @@
+name: adclima
+channels:
+  - nodefaults
+  - conda-forge
+dependencies:
+  - python
+  - poetry
