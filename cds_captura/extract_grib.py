@@ -2,8 +2,10 @@ from typing import Optional, Union, Dict
 import cdsapi
 import uuid
 import logging
+import pandas as pd
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
+import re
 
 # Client is responsible for create the connection with cdsapi
 # receives:
@@ -23,6 +25,7 @@ from datetime import datetime
 #
 # handles connection errors
 help = 'Use `help(extract_grib)` for more info.'
+help_con = 'Use `help(extract_grib.connection())` for more info.'
 cdsapirc = Path.home() / '.cdsapirc'
 credentials = 'url: https://cds.climate.copernicus.eu/api/v2\n' \
               'key: '
@@ -43,10 +46,10 @@ def check_credentials(uid, key):
     valid_key = eval('uuid.UUID(key).version == 4')
     if not valid_uid:
         return logging.error('Invalid UID. '+
-                             f'{help}')
+                             f'{help_con}')
     if not valid_key:
         return logging.error('Invalid API Key. '+
-                             f'{help}')
+                             f'{help_con}')
     return uid, key
 
 # uid(optional) str
@@ -111,9 +114,8 @@ def connect(uid: Optional[str] = None,
 #   choose between 3h range or 1h range?
 #   choose the coordinations to get? (difficult)
 
-def download(year: Optional[str] = None,
-             month: Optional[Union[list[str], str]] = None,
-             day: Optional[Union[list[str], str]] = None,
+def download(ini: str,
+             end: Optional[str] = None,
             #  epi_week: Optional[Union[list[str], str]] = None,
              filename: Optional[str] = None,
              uid: Optional[str] = None,
@@ -121,50 +123,61 @@ def download(year: Optional[str] = None,
             ):
 
     conn = connect(uid, key)
+    format = '%Y-%m-%d'
+    iso_format = 'YYYY-MM-DD'
+    re_format = r'\d{4}-\d{2}-\d{2}'
     today = datetime.now()
-    date_format = '%Y-%m-%d'
+    ini_date = datetime.strptime(ini, format)
 
-    if len(day) == 1:
-        day = f'{int(day):2d}'
-
-    if len(month) == 1:
-        month = f'{int(month):2d}'
-
-    if not year:
-        year = str(today.year)
-
-    if int(year) == today.year and (not month and not day):
-        day = []
-        month = []
-
-        if today.day <= 7:
-
-
-
-    if not month and
-
-    if day and not month:
+    # dataset has maximum of 7 days of update delay.
+    # in order to prevent requesting invalid dates,
+    # the max date is 7 days from today's date
+    max_update_delay = today - timedelta(days=7)
+    if ini_date > max_update_delay:
         return logging.error(f'''
-            Select at least one month.
-            {help}
+                Invalid date. The last update date is:
+                {datetime.strftime(max_update_delay, format)}
+                {help}
         ''')
 
-
-
-    # # epi_week is only available with year
-    # if epi_week and (month or day):
-    #     return logging.error(f'''
-    #         Unable to define the date range, please select
-    #         only the epidemiological week(s) and/or the year.
-    #         {help}
+    # check for right initial date format
+    if not re.match(re_format, ini):
+        return logging.error(f'''
+                Invalid initial date. Format:
+                {iso_format}
+                {help}
         ''')
 
-    # # downloading the entire year is not possible
-    # if year and not month or not day or not epi_week:
-    #     return logging.error('''
-    #         Range too long, please select the months or
-    #         the epidemiological weeks.
-    #     ''')
+    # an end date can be passed to define the date range
+    # if there is no end date, only the day specified on
+    # @param `ini` will be downloaded
+    if end:
+        # check for right end date format
+        if not re.match(re_format, end):
+            return logging.error(f'''
+                    Invalid end date. Format:
+                    {iso_format}
+                    {help}
+            ''')
+
+        end_date = datetime.strptime(end, format)
+
+        # example of file with date range:
+        # 20210920_20220920.grib
+        filename = f'{end}_{ini}.grib'
+
+        # end date can't be bigger than initial date
+        if end_date >= ini_date:
+            return logging.error(f'''
+                    Invalid date range.
+                    {help}
+            ''')
+
+        df = pd.date_range(start=end, end=ini)
+
+
+
+
 
 
     conn.retrieve(
@@ -178,9 +191,9 @@ def download(year: Optional[str] = None,
                 '2m_dewpoint_temperature',
                 'mean_sea_level_pressure',
             ],
-            'year': '2022',
-            'month': '09',
-            'day': '10',
+            'year': year,
+            'month': month,
+            'day': day,
             'time': [
                 '00:00', '03:00', '06:00',
                 '09:00', '12:00', '15:00',
@@ -191,7 +204,7 @@ def download(year: Optional[str] = None,
                 -34.79,
             ],
         },
-        'data/test2.grib')
+        f'data/{filename.replace("-","")}')
 
 
     # usage:
