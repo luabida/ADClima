@@ -1,0 +1,6 @@
+'maximum_2m_temperature_in_the_last_24_hours'
+'minimum_2m_temperature_in_the_last_24_hours'
+'2m_dewpoint_temperature'
+'2m_temperature'
+'total_precipitation'
+'evaporation'
