@@ -1,14 +1,7 @@
-from cds_captura.coord_points import RAW_LATITUDES, RAW_LONGITUDES
+import numpy as np
 
-
-def convert_lons(lst) -> list:
-    above_180 = [n - 360.0 for n in lst if n > 180.0]
-    under_180 = [n for n in lst if n <= 180.0]
-    return above_180 + under_180
-
-
-LONGITUDES = convert_lons(RAW_LONGITUDES)
-LATITUDES = list(reversed(RAW_LATITUDES))
+LONGITUDES = list(np.arange(-90.0,90.25,0.25))
+LATITUDES = list(np.arange(-180.0,180.25,0.25))
 
 
 def do_area(lat, lon) -> tuple:
