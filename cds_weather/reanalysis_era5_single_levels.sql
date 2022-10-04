@@ -1,0 +1,16 @@
+CREATE TABLE "Municipio"."clima_copernicus" (
+    date datetime UNIQUE CONSTRAINT,
+    geocode int UNIQUE CONSTRAINT,
+    temp_min real,
+    temp_max real,
+    temp_med real,
+    precip_min real,
+    precip_max real,
+    precip_med real,
+    umid_min real,
+    umid_med real,
+    umid_max real,
+    pressao_min real,
+    pressao_med real,
+    pressao_max real,
+);
