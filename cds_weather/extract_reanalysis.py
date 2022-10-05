@@ -81,7 +81,7 @@ from cds_weather import extract_latlons, connection, globals
 
 
 def download(
-    geocode: Optional(Union[int, str]) = None,
+    geocode: Optional[Union[int, str]] = None,
     past_date: Optional[str] = None,
     date: Optional[str] = None,
     data_dir: Optional[str] = None,

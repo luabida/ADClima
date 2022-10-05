@@ -1,3 +1,7 @@
+"""
+Globals variables used within cds_weather app.
+"""
+
 import numpy as np
 from pathlib import Path
 import os
